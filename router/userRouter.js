@@ -97,7 +97,7 @@ router.post('/login' , [
 
 
 //get user
-router.get('/' ,authenticate, async (request , response) => {
+router.get('/me' ,authenticate, async (request , response) => {
   try {
       let user = await User.findById(request.user.id).select('-password');
       response.status(200).json({user : user});

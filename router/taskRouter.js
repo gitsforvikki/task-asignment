@@ -70,43 +70,53 @@ router.get('/:taskId' , authenticate , async (request , response)=>{
 
 //update task
 
-router.put('/update-task/:taskId' , authenticate ,[
+router.put('/update/:taskId',authenticate,[
   body('title').notEmpty().withMessage('Title is Required'),
-  body('description').notEmpty().withMessage('Description required is Required'),
-  
-] ,async (request , response)=>{
+  body('description').notEmpty().withMessage('Description is Required')
+], async(request , response)=>{
   let errors =  validationResult(request);
   if(!errors.isEmpty()){
-    return response.status(401).json({errors : errors.array()});
+      return response.status(401).json({errors : errors.array()});
   }
-  try{
-    let {title , description} = request.body;
-    let updatedTask = {};
-    updatedTask.user = request.user.id;
-    if(title) updatedTask.title = title;
-    if(description) updatedTask.description = description;
 
-     //update to db
-     updatedTask = await Task.findOneAndUpdate({user : request.user.id},{
-      $set : updatedTask
+  try{
+    let taskId =  request.params.taskId;
+      let {title ,  description } = request.body;
+      let task = await Task.findOne({_id : taskId});
+      if(!task){
+          return response.status(401).json({
+              errors : [{msg : 'task not found'}]
+          })
+      }
+    
+      
+      let taskObj ={};
+      taskObj.user = request.user.id;
+      if(title) taskObj.title = title;
+      if(description) taskObj.description = description;
+         
+          
+      //update to db
+      task = await Task.findOneAndUpdate({_id : taskId},{
+          $set : taskObj
       },{new : true})
 
+
+
       response.status(200).json({
-        msg : 'task update successfully',
-        task : updatedTask
+          msg : 'Task update successfully..',
+          task : task
       })
+
 
   }
   catch(error){
-    console.log(error);
-    response.status(500).json({errors : [{msg : error.message}]});
+      console.log(error);
+      response.status(500).json({
+          errors :[{msg : error.message}]
+      });
   }
-
-
 });
-
-
-
 
 //delete task
 router.delete('/:taskId' , authenticate , async(request , response)=>{
@@ -127,6 +137,45 @@ router.delete('/:taskId' , authenticate , async(request , response)=>{
       response.status(500).json({errors : [{msg : error.message}]})
   }
 });
+
+
+
+//change status
+
+router.put('/update/status/:taskId',authenticate, async(request , response)=>{
+  try{
+    let taskId =  request.params.taskId;
+      let task = await Task.findOne({_id : taskId});
+      if(!task){
+          return response.status(401).json({
+              errors : [{msg : 'task not found'}]
+          })
+      }
+
+      //update to db
+      task = await Task.findOneAndUpdate({_id : taskId},{
+          $set : {isComplete : task.isComplete ? false : true}
+      },{new : true})
+
+      response.status(200).json({
+          msg : 'Status update successfully..',
+          task : task
+      })
+
+
+  }
+  catch(error){
+      console.log(error);
+      response.status(500).json({
+          errors :[{msg : error.message}]
+      });
+  }
+});
+
+
+
+
+
 
 
 module.exports = router;

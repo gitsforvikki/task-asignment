@@ -8,7 +8,8 @@ const TaskSchema =  new mongoose.Schema({
 },
   title : {type : String , required : true},
   description : {type : String , required : true},
-  isComplete:{type : Boolean , default : false}
+  isComplete:{type : Boolean , default:false}
+  
 }, {timestamps:true});
 
 const Task = mongoose.model('task' , TaskSchema);
